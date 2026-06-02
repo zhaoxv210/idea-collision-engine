@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Inter Tight", sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-ink-900 text-parchment;
+  min-height: 100vh;
+}
+
+@layer base {
+  ::selection {
+    @apply bg-amber-gold/30 text-parchment;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-parchment-muted/30;
+  }
+}
+
+@layer components {
+  .btn-outline {
+    @apply px-4 py-2 border border-parchment/30 rounded-lg
+           text-parchment font-body text-sm
+           transition-all duration-300
+           hover:border-amber-gold hover:text-amber-gold
+           hover:shadow-[0_0_15px_rgba(212,165,116,0.3)];
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 border-2 border-amber-gold rounded-lg
+           text-amber-gold font-body text-base font-medium
+           transition-all duration-300
+           hover:bg-amber-gold/10 hover:shadow-[0_0_25px_rgba(212,165,116,0.5)]
+           active:scale-95;
+  }
+
+  .card {
+    @apply bg-ink-800/50 border border-parchment/10 rounded-xl
+           backdrop-blur-sm p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-ink-800/50 border border-parchment/20
+           rounded-lg text-parchment font-body
+           placeholder:text-parchment/40
+           focus:border-amber-gold/50 focus:outline-none
+           focus:ring-1 focus:ring-amber-gold/30
+           transition-all duration-200;
+  }
+
+  .label-text {
+    @apply text-parchment/60 font-body text-sm mb-2 block;
+  }
+
+  .heading-display {
+    @apply font-display text-4xl md:text-5xl text-parchment tracking-wide;
+  }
+
+  .heading-section {
+    @apply font-display text-2xl md:text-3xl text-parchment;
+  }
+
+  .text-body {
+    @apply font-body text-base text-parchment/80 leading-relaxed;
+  }
+
+  .text-mono {
+    @apply font-mono text-sm text-parchment/70;
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-amber-gold to-amber-glow bg-clip-text text-transparent;
+  }
+
+  .noise-bg {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(232, 220, 196, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(232, 220, 196, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
