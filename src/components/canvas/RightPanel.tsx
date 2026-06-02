@@ -274,20 +274,23 @@ export function RightPanel({ className }: RightPanelProps) {
             创意火花（点击展开）
           </label>
           <div className="space-y-1.5">
-            {sparks.map((spark, i) => (
-              <button
-                key={i}
-                onClick={() => handleSparkClick(spark)}
-                className={cn(
-                  'w-full px-3 py-2 rounded-lg border text-left transition-all',
-                  selectedSpark === spark
-                    ? 'bg-amber-gold/10 border-amber-gold/50'
-                    : 'bg-ink-800/50 border-amber-gold/20 hover:border-amber-gold/40'
-                )}
-              >
-                <span className="text-amber-gold/90 font-mono text-sm">{spark}</span>
-              </button>
-            ))}
+            {sparks.map((spark, i) => {
+              const resultOnly = spark.includes('→') ? spark.split('→')[1].trim() : spark;
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleSparkClick(spark)}
+                  className={cn(
+                    'w-full px-3 py-2 rounded-lg border text-left transition-all',
+                    selectedSpark === spark
+                      ? 'bg-amber-gold/10 border-amber-gold/50'
+                      : 'bg-ink-800/50 border-amber-gold/20 hover:border-amber-gold/40'
+                  )}
+                >
+                  <span className="text-amber-gold/90 font-mono text-sm">{resultOnly}</span>
+                </button>
+              );
+            })}
           </div>
           <button
             onClick={() => {
