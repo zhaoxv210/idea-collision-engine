@@ -14,11 +14,13 @@ function IdeaNodeComponent({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as IdeaNodeData;
   const [isHovered, setIsHovered] = useState(false);
   const isSelected = selected || nodeData.selected;
+  const isLongText = nodeData.text.length > 100;
 
   return (
     <div
       className={cn(
-        'relative px-4 py-3 rounded-xl border-2 min-w-[120px] max-w-[200px]',
+        'relative px-4 py-3 rounded-xl border-2 min-w-[120px]',
+        isLongText ? 'max-w-[400px]' : 'max-w-[200px]',
         'bg-ink-800/90 backdrop-blur-sm',
         'transition-all duration-200',
         isSelected
@@ -95,7 +97,7 @@ function IdeaNodeComponent({ id, data, selected }: NodeProps) {
         ) : (
           <Sparkles className="text-domain-tech flex-shrink-0 mt-0.5" size={14} />
         )}
-        <span className="text-parchment font-body text-sm leading-tight break-words">
+        <span className="text-parchment font-body text-sm leading-tight break-words whitespace-pre-wrap">
           {nodeData.text}
         </span>
       </div>

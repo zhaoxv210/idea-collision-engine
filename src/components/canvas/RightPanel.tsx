@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link2, Sparkles, Loader2, Check, Zap, Plus, Trash2 } from 'lucide-react';
+import { Link2, Sparkles, Loader2, Check, Zap, Plus, Trash2, FileText } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createProvider } from '@/llm';
-import { suggestConnections, explainConnection, ideaSpark, sparkDetail } from '@/engine/canvasAI';
-import type { SparkIdea } from '@/prompts/ideaSpark';
+import { suggestConnections, explainConnection, ideaSpark, sparkDetail, generateProposal } from '@/engine/canvasAI';
+import type { SparkIdea } from '@/engine/canvasAI';
 import { cn } from '@/lib/utils';
 
 interface RightPanelProps {
@@ -19,6 +19,7 @@ export function RightPanel({ className }: RightPanelProps) {
   const [selectedSpark, setSelectedSpark] = useState<string | null>(null);
   const [sparkIdeas, setSparkIdeas] = useState<SparkIdea[]>([]);
   const [isExpandingSpark, setIsExpandingSpark] = useState(false);
+  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
 
   const {
     nodes,
@@ -110,8 +111,21 @@ export function RightPanel({ className }: RightPanelProps) {
   };
 
   const handleIdeaSpark = async () => {
-    const targetNodes = selectedNodes.length >= 2 ? selectedNodes : null;
-    if (!targetNodes || isProcessing) return;
+    if (isProcessing) return;
+
+    let targetNodes: { text: string }[] = [];
+
+    if (selectedNodes.length >= 2) {
+      targetNodes = selectedNodes;
+    } else if (selectedEdge) {
+      const fromNode = nodes.find((n) => n.id === selectedEdge.from);
+      const toNode = nodes.find((n) => n.id === selectedEdge.to);
+      if (fromNode && toNode) {
+        targetNodes = [fromNode, toNode];
+      }
+    }
+
+    if (targetNodes.length < 2) return;
 
     setIsProcessing(true);
     setIsSparking(true);
@@ -168,6 +182,61 @@ export function RightPanel({ className }: RightPanelProps) {
     });
 
     setSparkIdeas((prev) => prev.filter((i) => i !== idea));
+  };
+
+  const handleGenerateProposal = async () => {
+    if (selectedNodes.length !== 1 || isProcessing) return;
+
+    const targetNode = selectedNodes[0];
+    setIsGeneratingProposal(true);
+
+    try {
+      const config = useSettingsStore.getState();
+      const provider = createProvider(config);
+
+      const relatedEdges = edges.filter(
+        (e) => e.from === targetNode.id || e.to === targetNode.id
+      );
+      const relatedIdeas = relatedEdges
+        .map((e) => {
+          const otherId = e.from === targetNode.id ? e.to : e.from;
+          return nodes.find((n) => n.id === otherId)?.text;
+        })
+        .filter(Boolean) as string[];
+
+      const result = await generateProposal(
+        targetNode.text,
+        provider,
+        temperature,
+        relatedIdeas
+      );
+
+      if (result) {
+        const proposalText = `📋 ${result.title}\n\n` +
+          `📌 ${result.summary}\n\n` +
+          `🎯 目标：\n${result.objectives.map((o, i) => `  ${i + 1}. ${o}`).join('\n')}\n\n` +
+          `📝 实施步骤：\n${result.approach.steps.map((s, i) => `  ${i + 1}. ${s.name}：${s.description}`).join('\n')}\n\n` +
+          `⏱️ 时间：${result.resources.time} | 团队：${result.resources.team}\n\n` +
+          `💡 预期成果：${result.expectedOutcome}`;
+
+        const baseX = nodes.length > 0 ? Math.max(...nodes.map((n) => n.x)) + 300 : 100;
+        const baseY = targetNode.y;
+
+        addNode({
+          text: proposalText,
+          type: 'ai-generated',
+          x: baseX,
+          y: baseY,
+        });
+      } else {
+        alert('生成方案失败，请检查 LLM 配置或重试');
+      }
+    } catch (error) {
+      console.error('Failed to generate proposal:', error);
+      alert('生成方案出错：' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsGeneratingProposal(false);
+    }
   };
 
   const canSpark = selectedNodes.length >= 2 || selectedEdge;
@@ -238,20 +307,35 @@ export function RightPanel({ className }: RightPanelProps) {
           <label className="text-domain-tech font-body text-sm mb-3 block">
             创意方案（点击添加到画布）
           </label>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {sparkIdeas.map((idea, i) => (
               <button
                 key={i}
                 onClick={() => handleAddIdeaAsNode(idea)}
                 className="w-full p-3 bg-ink-800/50 rounded-lg border border-domain-tech/30 text-left hover:border-domain-tech/50 transition-all"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-parchment font-body text-sm font-medium">{idea.name}</div>
-                    <div className="text-parchment/50 text-xs mt-0.5">{idea.description}</div>
-                  </div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="text-parchment font-body text-sm font-medium">{idea.name}</div>
                   <Plus className="text-domain-tech flex-shrink-0" size={16} />
                 </div>
+                <div className="text-parchment/50 text-xs mb-2">{idea.description}</div>
+                {idea.steps && idea.steps.length > 0 && (
+                  <div className="mb-2">
+                    <div className="text-parchment/40 text-xs mb-1">关键步骤：</div>
+                    <div className="flex flex-wrap gap-1">
+                      {idea.steps.map((step, j) => (
+                        <span key={j} className="px-2 py-0.5 bg-ink-700/50 rounded text-parchment/60 text-xs">
+                          {step}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {idea.potential && (
+                  <div className="text-amber-gold/60 text-xs">
+                    💡 {idea.potential}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -343,6 +427,23 @@ export function RightPanel({ className }: RightPanelProps) {
               </div>
             ))}
           </div>
+          {selectedNodes.length === 1 && (
+            <button
+              onClick={handleGenerateProposal}
+              disabled={isGeneratingProposal}
+              className={cn(
+                'w-full mt-3 btn-outline flex items-center justify-center gap-2',
+                isGeneratingProposal && 'animate-pulse'
+              )}
+            >
+              {isGeneratingProposal ? (
+                <Loader2 className="animate-spin" size={14} />
+              ) : (
+                <FileText size={14} />
+              )}
+              <span>{isGeneratingProposal ? '生成中...' : '生成详细方案'}</span>
+            </button>
+          )}
           <button
             onClick={clearSelection}
             className="w-full mt-2 text-parchment/40 text-xs hover:text-parchment transition-colors"

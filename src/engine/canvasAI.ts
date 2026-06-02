@@ -10,6 +10,11 @@ import {
   parseSparkDetailResponse,
   type SparkIdea,
 } from '@/prompts/ideaSpark';
+import {
+  buildIdeaProposalPrompt,
+  parseIdeaProposalResponse,
+  type IdeaProposal,
+} from '@/prompts/ideaProposal';
 
 export interface AIOptions {
   onThinking?: (chunk: string) => void;
@@ -107,3 +112,23 @@ export async function sparkDetail(
   const parsed = parseSparkDetailResponse(response);
   return parsed?.ideas || [];
 }
+
+export async function generateProposal(
+  ideaText: string,
+  provider: LLMProvider,
+  temperature: number,
+  relatedIdeas?: string[],
+  options?: AIOptions
+): Promise<IdeaProposal | null> {
+  const messages = buildIdeaProposalPrompt(ideaText, relatedIdeas);
+
+  const response = await provider.chatStream(messages, { temperature }, (chunk) => {
+    options?.onThinking?.(chunk);
+  });
+
+  console.log('Proposal response:', response);
+  const parsed = parseIdeaProposalResponse(response);
+  return parsed;
+}
+
+export type { SparkIdea, IdeaProposal };

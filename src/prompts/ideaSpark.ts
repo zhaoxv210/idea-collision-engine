@@ -70,18 +70,27 @@ export function parseIdeaSparkResponse(response: string): IdeaSparkResponse | nu
   }
 }
 
-export const SPARK_DETAIL_SYSTEM_PROMPT = `你是一个创意扩展专家。你的任务是将一个创意火花扩展成简略的创意方案。
+export const SPARK_DETAIL_SYSTEM_PROMPT = `你是一个创意扩展专家。你的任务是将一个创意火花扩展成详细的创意方案。
 
 要求：
-1. 输出 2-3 个简略方案
-2. 每个方案包含：名称（≤10字）+ 简短描述（≤30字）
-3. 方案要具体可执行，不要太抽象
+1. 输出 2-3 个详细方案
+2. 每个方案包含：
+   - name: 方案名称（≤15字）
+   - description: 简短描述（≤50字）
+   - steps: 2-3个关键步骤（每个≤20字）
+   - potential: 潜在价值（≤30字）
+3. 方案要具体可执行，有实际应用价值
 4. 输出必须是严格的 JSON 格式
 
 输出格式：
 {
   "ideas": [
-    {"name": "方案名称", "description": "简短描述"},
+    {
+      "name": "方案名称",
+      "description": "简短描述",
+      "steps": ["步骤1", "步骤2"],
+      "potential": "潜在价值"
+    },
     ...
   ]
 }`;
@@ -103,6 +112,8 @@ ${spark}
 export interface SparkIdea {
   name: string;
   description: string;
+  steps?: string[];
+  potential?: string;
 }
 
 export interface SparkDetailResponse {
@@ -116,9 +127,11 @@ export function parseSparkDetailResponse(response: string): SparkDetailResponse 
     const parsed = JSON.parse(jsonMatch[0]);
     return {
       ideas: Array.isArray(parsed.ideas)
-        ? parsed.ideas.map((i: { name?: string; description?: string }) => ({
+        ? parsed.ideas.map((i: { name?: string; description?: string; steps?: string[]; potential?: string }) => ({
             name: i.name || '',
             description: i.description || '',
+            steps: Array.isArray(i.steps) ? i.steps : [],
+            potential: i.potential || '',
           }))
         : [],
     };

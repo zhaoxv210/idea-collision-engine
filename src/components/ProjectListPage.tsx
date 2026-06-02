@@ -126,6 +126,7 @@ export function ProjectListPage({ onOpenProject }: ProjectListPageProps) {
               <div
                 key={project.id}
                 className="card p-5 hover:border-amber-gold/40 transition-all cursor-pointer group"
+                onClick={() => onOpenProject(project.id)}
               >
                 {editingId === project.id ? (
                   <div className="flex items-center gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
@@ -151,7 +152,6 @@ export function ProjectListPage({ onOpenProject }: ProjectListPageProps) {
                   <div className="flex items-start justify-between mb-3">
                     <h3
                       className="text-parchment font-body font-medium text-lg group-hover:text-amber-gold transition-colors"
-                      onClick={() => onOpenProject(project.id)}
                     >
                       {project.name}
                     </h3>
@@ -183,7 +183,6 @@ export function ProjectListPage({ onOpenProject }: ProjectListPageProps) {
                 {project.description && (
                   <p
                     className="text-parchment/50 text-sm mb-3 line-clamp-2"
-                    onClick={() => onOpenProject(project.id)}
                   >
                     {project.description}
                   </p>
@@ -191,7 +190,6 @@ export function ProjectListPage({ onOpenProject }: ProjectListPageProps) {
 
                 <div
                   className="flex items-center gap-4 text-parchment/30 text-xs"
-                  onClick={() => onOpenProject(project.id)}
                 >
                   <div className="flex items-center gap-1">
                     <Layers size={12} />
