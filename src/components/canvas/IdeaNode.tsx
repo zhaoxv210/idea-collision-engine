@@ -29,19 +29,55 @@ function IdeaNodeComponent({ id, data, selected }: NodeProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Handle
+        type="source"
+        position={Position.Top}
+        id="top-source"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
+      />
+      <Handle
         type="target"
         position={Position.Top}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
+        id="top-target"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
+      />
+
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left-source"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
       />
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
+        id="left-target"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
+      />
+
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right-source"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right-target"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
+      />
+
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom-source"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
       />
       <Handle
         type="target"
         position={Position.Bottom}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
+        id="bottom-target"
+        className="!w-3 !h-3 !bg-amber-gold/40 !border-2 !border-amber-gold !cursor-crosshair"
       />
 
       {isHovered && nodeData.onDelete && (
@@ -66,22 +102,6 @@ function IdeaNodeComponent({ id, data, selected }: NodeProps) {
           {nodeData.text}
         </span>
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
-      />
-      <Handle
-        type="source"
-        position={Position.Top}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!w-2.5 !h-2.5 !bg-amber-gold/50 !border-2 !border-amber-gold"
-      />
     </div>
   );
 }
