@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { LLMConfig } from '@/llm/types';
 
 interface SettingsState extends LLMConfig {
@@ -53,6 +53,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'idea-collision-settings',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        providerType: state.providerType,
+        openai: state.openai,
+        ollama: state.ollama,
+        custom: state.custom,
+        temperature: state.temperature,
+      }),
     }
   )
 );

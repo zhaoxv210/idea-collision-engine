@@ -20,16 +20,17 @@ export const IDEA_SPARK_SYSTEM_PROMPT_MULTI = `你是一个创意火花生成器
 
 要求：
 1. 输出 5-10 条极短创意
-2. 每条必须 ≤ 20 个字
-3. 必须使用所有输入节点的组合，格式为 "A × B × C → D"
-4. 不允许解释，只输出创意
-5. 高密度发散，寻找非显而易见的组合
-6. D 必须是新的概念或想法，不能只是输入的重复
-7. 输出必须是严格的 JSON 格式
+2. 每条必须 ≤ 25 个字
+3. 必须使用【所有】输入节点进行组合，格式为 "A × B × C × ... → 新想法"
+4. 如果输入了 4 个节点，输出格式必须是 "A × B × C × D → E"
+5. 如果输入了 5 个节点，输出格式必须是 "A × B × C × D × E → F"
+6. 不允许解释，只输出创意
+7. 高密度发散，寻找非显而易见的组合
+8. 输出必须是严格的 JSON 格式
 
 输出格式：
 {
-  "sparks": ["A × B × C → D", "A × B × C → E", ...]
+  "sparks": ["A × B × C × D → E", "A × B × C × D → F", ...]
 }`;
 
 export function buildIdeaSparkPrompt(nodeTexts: string[]): ChatMessage[] {
@@ -40,10 +41,11 @@ export function buildIdeaSparkPrompt(nodeTexts: string[]): ChatMessage[] {
     { role: 'system', content: systemPrompt },
     {
       role: 'user',
-      content: `基于以下想法${isMulti ? '的组合碰撞' : ''}，生成创意火花：
+      content: `基于以下 ${nodeTexts.length} 个想法的组合碰撞，生成创意火花：
 
 ${nodeTexts.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 
+注意：必须使用全部 ${nodeTexts.length} 个想法进行组合！
 输出 JSON：`,
     },
   ];
@@ -60,7 +62,7 @@ export function parseIdeaSparkResponse(response: string): IdeaSparkResponse | nu
     const parsed = JSON.parse(jsonMatch[0]);
     return {
       sparks: Array.isArray(parsed.sparks)
-        ? parsed.sparks.filter((s: unknown) => typeof s === 'string' && s.length <= 35)
+        ? parsed.sparks.filter((s: unknown) => typeof s === 'string' && s.length <= 60)
         : [],
     };
   } catch {
