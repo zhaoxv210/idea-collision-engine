@@ -166,7 +166,9 @@ export function IdeaCanvas({ className }: IdeaCanvasProps) {
         defaultEdgeOptions={{
           type: 'ideaEdge',
         }}
-        connectionMode={ConnectionMode.Loose}
+        connectionMode={ConnectionMode.Strict}
+        snapToGrid
+        snapGrid={[15, 15]}
         selectionOnDrag
         panOnDrag={[1]}
         selectionMode={SelectionMode.Partial}
