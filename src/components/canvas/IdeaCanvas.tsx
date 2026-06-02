@@ -11,6 +11,7 @@ import {
   type Edge,
   type OnConnect,
   SelectionMode,
+  ConnectionMode,
   Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -165,6 +166,7 @@ export function IdeaCanvas({ className }: IdeaCanvasProps) {
         defaultEdgeOptions={{
           type: 'ideaEdge',
         }}
+        connectionMode={ConnectionMode.Loose}
         selectionOnDrag
         panOnDrag={[1]}
         selectionMode={SelectionMode.Partial}

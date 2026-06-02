@@ -1,4 +1,4 @@
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 
 interface IdeaEdgeData {
@@ -20,7 +20,7 @@ function IdeaEdgeComponent({
   const edgeData = data as unknown as IdeaEdgeData | undefined;
   const isAISuggested = edgeData?.type === 'ai-suggested';
 
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     targetX,

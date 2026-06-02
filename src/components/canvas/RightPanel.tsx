@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link2, Sparkles, Loader2, Check, Zap, Plus } from 'lucide-react';
+import { Link2, Sparkles, Loader2, Check, Zap, Plus, Trash2 } from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createProvider } from '@/llm';
@@ -32,6 +32,7 @@ export function RightPanel({ className }: RightPanelProps) {
     addEdge,
     addNode,
     updateEdge,
+    removeEdge,
     setAISuggestions,
     clearAISuggestions,
     setIsProcessing,
@@ -101,6 +102,11 @@ export function RightPanel({ className }: RightPanelProps) {
       setIsProcessing(false);
       setIsExplaining(false);
     }
+  };
+
+  const handleDeleteEdge = () => {
+    if (!selectedEdge) return;
+    removeEdge(selectedEdge.id);
   };
 
   const handleIdeaSpark = async () => {
@@ -394,6 +400,13 @@ export function RightPanel({ className }: RightPanelProps) {
                 <span>{isExplaining ? 'AI 解释中...' : 'AI 解释连接'}</span>
               </button>
             )}
+            <button
+              onClick={handleDeleteEdge}
+              className="w-full mt-2 btn-outline text-xs py-1.5 flex items-center justify-center gap-1 text-red-400/70 hover:text-red-400 hover:border-red-400/50"
+            >
+              <Trash2 size={14} />
+              <span>删除连接</span>
+            </button>
           </div>
         </div>
       )}
