@@ -19,6 +19,8 @@ export interface IdeaEdge {
   to: string;
   type: EdgeType;
   explanation?: string;
+  sourceHandle?: string;
+  targetHandle?: string;
 }
 
 export interface AISuggestion {

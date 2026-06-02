@@ -1,28 +1,92 @@
 import { useState } from 'react';
-import { Settings, Trash2, Menu, X } from 'lucide-react';
+import { Settings, Trash2, Menu, X, FolderOpen, ChevronDown } from 'lucide-react';
 import { IdeaCanvas } from '@/components/canvas/IdeaCanvas';
 import { LeftPanel } from '@/components/canvas/LeftPanel';
 import { RightPanel } from '@/components/canvas/RightPanel';
 import { useCanvasStore } from '@/store/useCanvasStore';
+import { useProjectStore } from '@/store/useProjectStore';
 import { cn } from '@/lib/utils';
 
 interface CanvasPageProps {
   onSettings: () => void;
+  onProjects: () => void;
+  projectName: string;
 }
 
-export function CanvasPage({ onSettings }: CanvasPageProps) {
+export function CanvasPage({ onSettings, onProjects, projectName }: CanvasPageProps) {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const { clearCanvas, nodes, edges } = useCanvasStore();
+  const { projects, currentProjectId, switchProject, saveCurrentProject } = useProjectStore();
+
+  const handleSwitchProject = (projectId: string) => {
+    if (projectId !== currentProjectId) {
+      saveCurrentProject(nodes, edges);
+      switchProject(projectId);
+    }
+    setProjectDropdownOpen(false);
+  };
 
   return (
     <div className="h-screen flex flex-col bg-ink-900">
       <header className="flex-shrink-0 h-14 border-b border-parchment/10 bg-ink-800/50 backdrop-blur-sm">
         <div className="h-full px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="font-display text-xl text-parchment">
-              Idea <span className="text-amber-gold">Canvas</span>
-            </h1>
+            <div className="relative">
+              <button
+                onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ink-700/50 hover:bg-ink-700 transition-colors"
+              >
+                <FolderOpen className="text-amber-gold" size={16} />
+                <span className="font-display text-lg text-parchment">
+                  {projectName}
+                </span>
+                <ChevronDown className="text-parchment/40" size={14} />
+              </button>
+
+              {projectDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setProjectDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-ink-800 border border-parchment/20 rounded-lg shadow-xl z-20 animate-fade-in">
+                    <div className="p-2 border-b border-parchment/10">
+                      <button
+                        onClick={() => {
+                          setProjectDropdownOpen(false);
+                          onProjects();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-amber-gold hover:bg-amber-gold/10 rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <FolderOpen size={14} />
+                        <span>项目管理...</span>
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-1">
+                      {projects.map((project) => (
+                        <button
+                          key={project.id}
+                          onClick={() => handleSwitchProject(project.id)}
+                          className={cn(
+                            'w-full px-3 py-2 text-left text-sm rounded-lg transition-colors',
+                            project.id === currentProjectId
+                              ? 'bg-amber-gold/20 text-amber-gold'
+                              : 'text-parchment hover:bg-parchment/10'
+                          )}
+                        >
+                          <div className="font-medium">{project.name}</div>
+                          <div className="text-xs text-parchment/40 mt-0.5">
+                            {project.nodes.length} 节点 · {project.edges.length} 连接
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <span className="text-parchment/40 text-sm hidden md:inline">
               可视化思维画板
             </span>

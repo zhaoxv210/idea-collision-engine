@@ -67,6 +67,8 @@ export function IdeaCanvas({ className }: IdeaCanvasProps) {
       id: e.id,
       source: e.from,
       target: e.to,
+      sourceHandle: e.sourceHandle,
+      targetHandle: e.targetHandle,
       type: 'ideaEdge',
       data: { type: e.type, explanation: e.explanation },
     }))
@@ -94,6 +96,8 @@ export function IdeaCanvas({ className }: IdeaCanvasProps) {
         id: e.id,
         source: e.from,
         target: e.to,
+        sourceHandle: e.sourceHandle,
+        targetHandle: e.targetHandle,
         type: 'ideaEdge',
         data: { type: e.type, explanation: e.explanation },
       }))
@@ -107,6 +111,8 @@ export function IdeaCanvas({ className }: IdeaCanvasProps) {
           from: connection.source,
           to: connection.target,
           type: 'manual',
+          sourceHandle: connection.sourceHandle,
+          targetHandle: connection.targetHandle,
         });
       }
     },
