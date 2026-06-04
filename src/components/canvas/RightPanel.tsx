@@ -3,8 +3,7 @@ import { Link2, Sparkles, Loader2, Check, Zap, Plus, Trash2, FileText } from 'lu
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { createProvider } from '@/llm';
-import { suggestConnections, explainConnection, ideaSpark, sparkDetail, generateProposal } from '@/engine/canvasAI';
-import type { SparkIdea } from '@/engine/canvasAI';
+import { suggestConnections, explainConnection, ideaSpark, generateProposal } from '@/engine/canvasAI';
 import { cn } from '@/lib/utils';
 
 interface RightPanelProps {
@@ -16,9 +15,6 @@ export function RightPanel({ className }: RightPanelProps) {
   const [isExplaining, setIsExplaining] = useState(false);
   const [isSparking, setIsSparking] = useState(false);
   const [sparks, setSparks] = useState<string[]>([]);
-  const [selectedSpark, setSelectedSpark] = useState<string | null>(null);
-  const [sparkIdeas, setSparkIdeas] = useState<SparkIdea[]>([]);
-  const [isExpandingSpark, setIsExpandingSpark] = useState(false);
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
 
   const {
@@ -148,40 +144,20 @@ export function RightPanel({ className }: RightPanelProps) {
     }
   };
 
-  const handleSparkClick = async (spark: string) => {
-    if (isProcessing) return;
-
-    setSelectedSpark(spark);
-    setSparkIdeas([]);
-    setIsProcessing(true);
-    setIsExpandingSpark(true);
-
-    try {
-      const config = useSettingsStore.getState();
-      const provider = createProvider(config);
-
-      const ideas = await sparkDetail(spark, provider, temperature);
-      setSparkIdeas(ideas);
-    } catch (error) {
-      console.error('Failed to expand spark:', error);
-    } finally {
-      setIsProcessing(false);
-      setIsExpandingSpark(false);
-    }
-  };
-
-  const handleAddIdeaAsNode = (idea: SparkIdea) => {
+  const handleSparkClick = (spark: string) => {
+    const resultOnly = spark.includes('→') ? spark.split('→')[1].trim() : spark;
+    
     const baseX = nodes.length > 0 ? Math.max(...nodes.map((n) => n.x)) + 200 : 100;
     const baseY = nodes.length > 0 ? nodes[0].y : 100;
 
     addNode({
-      text: idea.name,
+      text: resultOnly,
       type: 'ai-generated',
       x: baseX,
-      y: baseY + sparkIdeas.indexOf(idea) * 100,
+      y: baseY + sparks.indexOf(spark) * 80,
     });
 
-    setSparkIdeas((prev) => prev.filter((i) => i !== idea));
+    setSparks((prev) => prev.filter((s) => s !== spark));
   };
 
   const handleGenerateProposal = async () => {
@@ -271,7 +247,7 @@ export function RightPanel({ className }: RightPanelProps) {
       {sparks.length > 0 && (
         <div className="border-t border-parchment/10 pt-4">
           <label className="text-amber-gold font-body text-sm mb-3 block">
-            创意火花（点击展开）
+            创意火花（点击添加到画布）
           </label>
           <div className="space-y-1.5">
             {sparks.map((spark, i) => {
@@ -280,12 +256,7 @@ export function RightPanel({ className }: RightPanelProps) {
                 <button
                   key={i}
                   onClick={() => handleSparkClick(spark)}
-                  className={cn(
-                    'w-full px-3 py-2 rounded-lg border text-left transition-all',
-                    selectedSpark === spark
-                      ? 'bg-amber-gold/10 border-amber-gold/50'
-                      : 'bg-ink-800/50 border-amber-gold/20 hover:border-amber-gold/40'
-                  )}
+                  className="w-full px-3 py-2 rounded-lg border text-left transition-all bg-ink-800/50 border-amber-gold/20 hover:border-amber-gold/40 hover:bg-amber-gold/10"
                 >
                   <span className="text-amber-gold/90 font-mono text-sm">{resultOnly}</span>
                 </button>
@@ -293,62 +264,11 @@ export function RightPanel({ className }: RightPanelProps) {
             })}
           </div>
           <button
-            onClick={() => {
-              setSparks([]);
-              setSelectedSpark(null);
-              setSparkIdeas([]);
-            }}
+            onClick={() => setSparks([])}
             className="w-full mt-2 text-parchment/40 text-xs hover:text-parchment transition-colors"
           >
             清除
           </button>
-        </div>
-      )}
-
-      {sparkIdeas.length > 0 && (
-        <div className="border-t border-parchment/10 pt-4">
-          <label className="text-domain-tech font-body text-sm mb-3 block">
-            创意方案（点击添加到画布）
-          </label>
-          <div className="space-y-3">
-            {sparkIdeas.map((idea, i) => (
-              <button
-                key={i}
-                onClick={() => handleAddIdeaAsNode(idea)}
-                className="w-full p-3 bg-ink-800/50 rounded-lg border border-domain-tech/30 text-left hover:border-domain-tech/50 transition-all"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="text-parchment font-body text-sm font-medium">{idea.name}</div>
-                  <Plus className="text-domain-tech flex-shrink-0" size={16} />
-                </div>
-                <div className="text-parchment/50 text-xs mb-2">{idea.description}</div>
-                {idea.steps && idea.steps.length > 0 && (
-                  <div className="mb-2">
-                    <div className="text-parchment/40 text-xs mb-1">关键步骤：</div>
-                    <div className="flex flex-wrap gap-1">
-                      {idea.steps.map((step, j) => (
-                        <span key={j} className="px-2 py-0.5 bg-ink-700/50 rounded text-parchment/60 text-xs">
-                          {step}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {idea.potential && (
-                  <div className="text-amber-gold/60 text-xs">
-                    💡 {idea.potential}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isExpandingSpark && (
-        <div className="flex items-center justify-center gap-2 text-parchment/60 text-sm">
-          <Loader2 className="animate-spin" size={14} />
-          <span>展开创意中...</span>
         </div>
       )}
 

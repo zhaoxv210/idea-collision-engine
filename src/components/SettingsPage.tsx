@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Settings, ChevronLeft, Check, X, Eye, EyeOff } from 'lucide-react';
+import { Settings, ChevronLeft, Check, X, Eye, EyeOff, DollarSign, Trash2 } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useTokenUsageStore } from '@/store/useTokenUsageStore';
 import { createProvider } from '@/llm';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +46,8 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     setCustom,
     setTemperature,
   } = useSettingsStore();
+
+  const tokenUsage = useTokenUsageStore();
 
   const [showApiKey, setShowApiKey] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -262,6 +265,99 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               <div className="flex items-center gap-2 text-red-400">
                 <X size={18} />
                 <span className="text-sm">连接失败</span>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-parchment/10 pt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <DollarSign className="text-amber-gold" size={20} />
+              <h2 className="text-parchment font-body font-medium">Token 预算与消耗</h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="card p-4">
+                <div className="text-parchment/40 text-xs mb-1">预算上限</div>
+                <div className="text-amber-gold font-body text-lg">${tokenUsage.budget.toFixed(2)}</div>
+              </div>
+              <div className="card p-4">
+                <div className="text-parchment/40 text-xs mb-1">剩余额度</div>
+                <div className={cn(
+                  'font-body text-lg',
+                  tokenUsage.getRemaining() < tokenUsage.budget * 0.2
+                    ? 'text-red-400'
+                    : 'text-green-400'
+                )}>
+                  ${tokenUsage.getRemaining().toFixed(2)}
+                </div>
+              </div>
+              <div className="card p-4">
+                <div className="text-parchment/40 text-xs mb-1">已消耗</div>
+                <div className="text-parchment font-body text-lg">${tokenUsage.getTotalUsed().toFixed(3)}</div>
+              </div>
+              <div className="card p-4">
+                <div className="text-parchment/40 text-xs mb-1">今日消耗</div>
+                <div className="text-parchment font-body text-lg">${tokenUsage.getTodayUsage().toFixed(3)}</div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="label-text">预算上限 ($)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={tokenUsage.budget}
+                  onChange={(e) => tokenUsage.setBudget(parseFloat(e.target.value) || 0)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="label-text">每 1K Token 价格 ($)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={tokenUsage.pricePer1kTokens}
+                  onChange={(e) => tokenUsage.setPricePer1kTokens(parseFloat(e.target.value) || 0)}
+                  className="input-field"
+                />
+                <p className="text-parchment/30 text-xs mt-1">
+                  GPT-4o: $0.005, GPT-4o-mini: $0.00015, DeepSeek: $0.001
+                </p>
+              </div>
+            </div>
+
+            {tokenUsage.records.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-parchment/60 text-sm">最近调用记录</label>
+                  <button
+                    onClick={() => tokenUsage.clearRecords()}
+                    className="text-red-400/60 text-xs hover:text-red-400 flex items-center gap-1"
+                  >
+                    <Trash2 size={12} />
+                    清除
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {tokenUsage.getRecentRecords(10).map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center justify-between p-2 bg-ink-800/50 rounded text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-parchment/60">{record.operation}</span>
+                        <span className="text-parchment/40">{record.model}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-parchment/50">{record.totalTokens} tokens</span>
+                        <span className="text-amber-gold/70">${record.cost.toFixed(4)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

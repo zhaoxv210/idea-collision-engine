@@ -1,4 +1,9 @@
 import type { ChatMessage, ChatOptions, LLMProvider, OpenAIConfig } from './types';
+import { useTokenUsageStore } from '@/store/useTokenUsageStore';
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
 
 export class OpenAIProvider implements LLMProvider {
   name = 'OpenAI';
@@ -33,7 +38,20 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    const content = data.choices[0].message.content;
+
+    const usage = data.usage;
+    if (usage) {
+      useTokenUsageStore.getState().addUsage({
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        model: this.model,
+        operation: options?.operation || 'chat',
+      });
+    }
+
+    return content;
   }
 
   async chatStream(
@@ -41,6 +59,9 @@ export class OpenAIProvider implements LLMProvider {
     options: ChatOptions | undefined,
     onChunk: (chunk: string) => void
   ): Promise<string> {
+    const promptText = messages.map((m) => m.content).join('');
+    const estimatedPromptTokens = estimateTokens(promptText);
+
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -91,12 +112,21 @@ export class OpenAIProvider implements LLMProvider {
       }
     }
 
+    const estimatedCompletionTokens = estimateTokens(fullContent);
+    useTokenUsageStore.getState().addUsage({
+      promptTokens: estimatedPromptTokens,
+      completionTokens: estimatedCompletionTokens,
+      totalTokens: estimatedPromptTokens + estimatedCompletionTokens,
+      model: this.model,
+      operation: options?.operation || 'chat',
+    });
+
     return fullContent;
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      await this.chat([{ role: 'user', content: 'Hello' }], { maxTokens: 10 });
+      await this.chat([{ role: 'user', content: 'Hello' }], { maxTokens: 10, operation: 'test' });
       return true;
     } catch {
       return false;
